@@ -2,7 +2,7 @@
  * TODO: take a look at wwwroot/repository/filepicker.js
  */
 YUI.add('moodle-block_alma-loans', function(Y) {
-    
+
     M.block_alma = M.block_alma || {};
     M.block_alma.loans = {
 
@@ -10,6 +10,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         overdue: 0,                     // Count of overdue loan items
         uri: M.cfg.wwwroot+'/blocks/alma/loans.php',
         response: null,
+        blockname: M.util.get_string('pluginname','block_alma'),
 
         init: function() {
             var params = {
@@ -23,7 +24,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 context: this,
                 on: {
                     success: function(id, o) {
-                        Y.log('AJAX call complete: ' + o.responseText, 
+                        Y.log('AJAX call complete: ' + o.responseText,
                               'info', 'moodle-block_alma-loans');
                         try {
                             var response = Y.JSON.parse(o.responseText);
@@ -56,25 +57,34 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 Y.one('#almaprogress').replace('<div>'+errormsg+'</div>');
                 return;
             }
+
+            popupcontent = Y.Node.create('<table />');
+
             for (var i in response.item_loans) {
+                row = Y.Node.create('<tr />');
                 if (response.item_loans[i].loanStatus == 'Active') {
                     this.active++;
                 }
                 if (response.item_loans[i].loanStatus == 'Overdue') {
                     this.overdue++;
                 }
+                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
+                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
+                row.appendChild(cellTitle);
+                row.appendChild(cellDuedate);
+                popupcontent.appendChild(row);
             }
             var loanstatus = Y.Node.create('<div />');
-            activeHTML = (this.active > 1) 
-                       ? M.util.get_string('activeitems', 'block_alma', this.active) 
+            activeHTML = (this.active > 1)
+                       ? M.util.get_string('activeitems', 'block_alma', this.active)
                        : M.util.get_string('activeitem', 'block_alma', this.active);
             activediv = Y.Node.create(activeHTML);
             activediv.addClass('alma_active');
             loanstatus.appendChild(activediv);
-            
+
             if (this.overdue > 0) {
                 overdueHTML = (this.overdue > 1)
-                            ? M.util.get_string('overdueitems', 'block_alma', this.overdue) 
+                            ? M.util.get_string('overdueitems', 'block_alma', this.overdue)
                             : M.util.get_string('overdueitem', 'block_alma', this.overdue);
                 overduediv = Y.Node.create(overdueHTML);
                 overduediv.addClass('alma_overdue');
@@ -82,6 +92,20 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             }
             Y.one('#almaprogress').replace(loanstatus);
             loanstatus.set('id', 'loanstatus');
+
+            popup = new M.core.dialogue({
+                draggable    : true,
+                headerContent: '<span id="popup">' + this.blockname + '</span>',
+                bodyContent  : popupcontent,
+                centered     : true,
+                width        : '480px',
+                modal        : true,
+                visible      : false
+            });
+
+            loanstatus.on('click', function() {
+                popup.show();
+            });
         }
     };
 }, '@VERSION@', {

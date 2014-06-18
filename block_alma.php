@@ -24,14 +24,15 @@ class block_alma extends block_base {
         $this->content = new stdClass();
         $this->content->text = $loading;
         $this->content->footer = '';
-        
+
         $this->page->requires->yui_module('moodle-block_alma-loans',
                                           'M.block_alma.loans.init',
                                           array(sesskey())
                                           );
 
         $requiredstrings = array('activeitem',  'activeitems',
-                                 'overdueitem', 'overdueitems');
+                                 'overdueitem', 'overdueitems',
+                                 'pluginname');
         $this->page->requires->strings_for_js($requiredstrings,
                                               $this->blockname);
         return $this->content;
