@@ -11,6 +11,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         uri: M.cfg.wwwroot+'/blocks/alma/loans.php',
         response: null,
         blockname: M.util.get_string('pluginname','block_alma'),
+        popup: null,
 
         init: function() {
             var params = {
@@ -88,18 +89,28 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             Y.one('#almaprogress').replace(loanstatus);
             loanstatus.set('id', 'loanstatus');
 
-            popup = new M.core.dialogue({
+            this.popup = new M.core.dialogue({
                 draggable    : true,
-                headerContent: '<span id="popup">' + this.blockname + '</span>',
+                headerContent: this.blockname,
                 bodyContent  : this.getPopupText(),
                 centered     : true,
                 width        : '650px',
                 modal        : true,
                 visible      : false
             });
-            loanstatus.on('click', function() {
-                popup.show();
+            this.popup.addButton({
+                label: 'Renew',
+                context: M.block_alma.loans,
+                action: 'renewLoans'
             });
+            loanstatus.on('click', this.popup.show, this.popup);
+        },
+        renewLoans: function() {
+            
+            // TODO : get this function to renew loans and set the bodyContent
+            // (or some of its child nodes) to new values.
+            // @see http://yuilibrary.com/yui/docs/api/classes/Panel.html
+            this.popup.set('bodyContent', 'Only Users Lose Drugs');
         },
         getPopupText: function() {
             response = this.response;
