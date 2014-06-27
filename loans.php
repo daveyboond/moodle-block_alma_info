@@ -24,11 +24,11 @@ $useridentifier  = $USER->idnumber;
 $login = "AlmaSDK-{$soapuser}-institutionCode-{$institutioncode}";
 
 $options = array(
-				'login'     => $login,
-				'password'  => $password,
-				'trace'     => true, // Not for production
-				'exception' => true,
-				);
+                'login'     => $login,
+                'password'  => $password,
+                'trace'     => true, // Not for production
+                'exception' => true,
+                );
 
 $alma = new SoapClient($wsdl, $options);
 $soapresult = $alma->getUserLoans(array('arg0' => $useridentifier));
@@ -36,11 +36,11 @@ $searchresults = simplexml_load_string($soapresult->SearchResults);
 $namespaces = $searchresults->getNameSpaces(true); // recursive
 
 if ($searchresults->errorsExist == 'true') {
-	// see $searchresults->errorList->error->errorMessage
-	$output  = json_encode($searchresults);
+    // see $searchresults->errorList->error->errorMessage
+    $output  = json_encode($searchresults);
 } else {
-	$searchresult = $searchresults->result->search_web_service->searchResult;
-	$xb           = $searchresult->children($namespaces['xb']);
-	$output       = json_encode($xb);
+    $searchresult = $searchresults->result->search_web_service->searchResult;
+    $xb           = $searchresult->children($namespaces['xb']);
+    $output       = json_encode($xb);
 }
 echo $output;
