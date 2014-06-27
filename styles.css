@@ -1,6 +1,7 @@
 /**
  * Styles for block_alma
  */
+.block_alma #loanstatus { cursor: pointer; }
 .alma_active { font-weight: bold; color: #32CD32; }
 .alma_overdue { font-weight: bold; color: #ff0000; }
 .alma_table { table-layout: fixed; width: 100%;}
