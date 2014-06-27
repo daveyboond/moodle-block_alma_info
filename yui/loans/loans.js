@@ -59,17 +59,24 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             }
 
             popupcontent = Y.Node.create('<table />');
+            popupcontent.addClass('alma_table');
 
             for (var i in response.item_loans) {
                 row = Y.Node.create('<tr />');
+
+                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
+                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
+                cellDuedate.addClass('alma_cell_duedate');
+
                 if (response.item_loans[i].loanStatus == 'Active') {
+                    cellDuedate.addClass('alma_active');
                     this.active++;
                 }
                 if (response.item_loans[i].loanStatus == 'Overdue') {
+                    cellDuedate.addClass('alma_overdue');
                     this.overdue++;
                 }
-                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
-                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
+
                 row.appendChild(cellTitle);
                 row.appendChild(cellDuedate);
                 popupcontent.appendChild(row);
@@ -98,7 +105,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 headerContent: '<span id="popup">' + this.blockname + '</span>',
                 bodyContent  : popupcontent,
                 centered     : true,
-                width        : '480px',
+                width        : '650px',
                 modal        : true,
                 visible      : false
             });
