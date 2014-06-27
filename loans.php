@@ -43,4 +43,5 @@ if ($searchresults->errorsExist == 'true') {
     $xb           = $searchresult->children($namespaces['xb']);
     $output       = json_encode($xb);
 }
+header('Content-type: application/json');
 echo $output;
