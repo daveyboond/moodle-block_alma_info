@@ -27,12 +27,12 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                         Y.log('AJAX call complete: ' + o.responseText,
                               'info', 'moodle-block_alma-loans');
                         try {
-                            var response = Y.JSON.parse(o.responseText);
+                            this.response = Y.JSON.parse(o.responseText);
                         } catch (e) {
                             errormsg = '<div>' + e + '</div>';
                             Y.one('#almaprogress').replace(errormsg);
                         }
-                        this.setText(response);
+                        this.setBlockText();
                     },
                     failure: function(id, o) {
                         if (o.statusText != 'abort') {
@@ -45,7 +45,8 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 }
             });
         },
-        setText: function(response) {
+        setBlockText: function() {
+            var response = this.response;
             var errormsg;
             if (response['error']) { // Moodle has erred
                 errormsg = response['error'];
@@ -58,29 +59,15 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 return;
             }
 
-            popupcontent = Y.Node.create('<table />');
-            popupcontent.addClass('alma_table');
-
             for (var i in response.item_loans) {
-                row = Y.Node.create('<tr />');
-
-                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
-                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
-                cellDuedate.addClass('alma_cell_duedate');
-
                 if (response.item_loans[i].loanStatus == 'Active') {
-                    cellDuedate.addClass('alma_active');
                     this.active++;
                 }
                 if (response.item_loans[i].loanStatus == 'Overdue') {
-                    cellDuedate.addClass('alma_overdue');
                     this.overdue++;
                 }
-
-                row.appendChild(cellTitle);
-                row.appendChild(cellDuedate);
-                popupcontent.appendChild(row);
             }
+
             var loanstatus = Y.Node.create('<div />');
             activeHTML = (this.active > 1)
                        ? M.util.get_string('activeitems', 'block_alma', this.active)
@@ -97,22 +84,48 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 overduediv.addClass('alma_overdue');
                 loanstatus.appendChild(overduediv);
             }
+
             Y.one('#almaprogress').replace(loanstatus);
             loanstatus.set('id', 'loanstatus');
 
             popup = new M.core.dialogue({
                 draggable    : true,
                 headerContent: '<span id="popup">' + this.blockname + '</span>',
-                bodyContent  : popupcontent,
+                bodyContent  : this.getPopupText(),
                 centered     : true,
                 width        : '650px',
                 modal        : true,
                 visible      : false
             });
-
             loanstatus.on('click', function() {
                 popup.show();
             });
+        },
+        getPopupText: function() {
+            response = this.response;
+
+            popupcontent = Y.Node.create('<table />');
+            popupcontent.addClass('alma_table');
+
+            for (var i in response.item_loans) {
+                row = Y.Node.create('<tr />');
+
+                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
+                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
+                cellDuedate.addClass('alma_cell_duedate');
+
+                if (response.item_loans[i].loanStatus == 'Active') {
+                    cellDuedate.addClass('alma_active');
+                }
+                if (response.item_loans[i].loanStatus == 'Overdue') {
+                    cellDuedate.addClass('alma_overdue');
+                }
+
+                row.appendChild(cellTitle);
+                row.appendChild(cellDuedate);
+                popupcontent.appendChild(row);
+            }
+            return popupcontent;
         }
     };
 }, '@VERSION@', {
