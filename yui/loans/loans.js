@@ -8,19 +8,21 @@ YUI.add('moodle-block_alma-loans', function(Y) {
 
         active: 0,                      // Count of active loan items
         overdue: 0,                     // Count of overdue loan items
-        uri: M.cfg.wwwroot+'/blocks/alma/loans.php',
+        loansuri: M.cfg.wwwroot+'/blocks/alma/loans.php',
         response: null,
         blockname: M.util.get_string('pluginname','block_alma'),
         popup: null,
+        error: null,
 
         init: function() {
             var params = {
                 sesskey : M.cfg.sesskey,
                 };
-            this.getLoans(params);
+            Y.on('io:end', this.setBlockText, this);
+            this.getLoans(params, this.loansuri);
         },
-        getLoans: function(params) {
-            var xhr = Y.io(this.uri, {
+        getLoans: function(params, uri) {
+            var xhr = Y.io(uri, {
                 data: build_querystring(params),
                 context: this,
                 on: {
@@ -30,35 +32,29 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                         try {
                             this.response = Y.JSON.parse(o.responseText);
                         } catch (e) {
-                            errormsg = '<div>' + e + '</div>';
-                            Y.one('#almaprogress').replace(errormsg);
+                            this.error = e;
                         }
-                        this.setBlockText();
+                        if (this.response['error']) { // Moodle has erred
+                            this.error = response['error'];
+                        }
+                        if (this.response['errorsExist']) { // Alma has erred
+                            this.error = response.errorList.error.errorMessage;
+                        }
                     },
                     failure: function(id, o) {
+                        Y.log('AJAX call failed: ' + o.responseText,
+                              'info', 'moodle-block_alma-loans');
                         if (o.statusText != 'abort') {
                             if (o.statusText !== undefined) {
-                                var errormsg = '<div>Error: '+o.statusText+'</div>';
-                                Y.one('#almaprogress').replace(errormsg);
+                                this.error = o.statusText;
                             }
                         }
-                    }
+                    },
                 }
             });
         },
         setBlockText: function() {
             var response = this.response;
-            var errormsg;
-            if (response['error']) { // Moodle has erred
-                errormsg = response['error'];
-            }
-            if (response['errorsExist']) { // Alma has erred
-                errormsg = response.errorList.error.errorMessage;
-            }
-            if (errormsg) {
-                Y.one('#almaprogress').replace('<div>'+errormsg+'</div>');
-                return;
-            }
 
             for (var i in response.item_loans) {
                 if (response.item_loans[i].loanStatus == 'Active') {
@@ -106,7 +102,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             loanstatus.on('click', this.popup.show, this.popup);
         },
         renewLoans: function() {
-            
             // TODO : get this function to renew loans and set the bodyContent
             // (or some of its child nodes) to new values.
             // @see http://yuilibrary.com/yui/docs/api/classes/Panel.html
