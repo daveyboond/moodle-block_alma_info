@@ -9,6 +9,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         active: 0,                      // Count of active loan items
         overdue: 0,                     // Count of overdue loan items
         loansuri: M.cfg.wwwroot+'/blocks/alma/loans.php',
+        renewuri: M.cfg.wwwroot+'/blocks/alma/renew.php',
         response: null,
         blockname: M.util.get_string('pluginname','block_alma'),
         popup: null,
@@ -19,9 +20,9 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 sesskey : M.cfg.sesskey,
                 };
             Y.on('io:end', this.setBlockText, this);
-            this.getLoans(params, this.loansuri);
+            this.almaRequest(params, this.loansuri);
         },
-        getLoans: function(params, uri) {
+        almaRequest: function(params, uri) {
             var xhr = Y.io(uri, {
                 data: build_querystring(params),
                 context: this,
@@ -105,7 +106,12 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             // TODO : get this function to renew loans and set the bodyContent
             // (or some of its child nodes) to new values.
             // @see http://yuilibrary.com/yui/docs/api/classes/Panel.html
-            this.popup.set('bodyContent', 'Only Users Lose Drugs');
+            // this.popup.set('bodyContent', 'Only Users Lose Drugs');
+            var params = {
+                sesskey : M.cfg.sesskey,
+                };
+            this.almaRequest(params, this.renewuri);
+            var response = this.response;
         },
         getPopupText: function() {
             response = this.response;
