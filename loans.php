@@ -20,6 +20,7 @@ $soapuser        = get_config('block_alma', 'soapuser');
 $institutioncode = get_config('block_alma', 'institutioncode');
 $password        = get_config('block_alma', 'soappassword');
 $useridentifier  = $USER->idnumber;
+$action          = required_param('action', PARAM_ALPHA);
 
 $login = "AlmaSDK-{$soapuser}-institutionCode-{$institutioncode}";
 
@@ -31,17 +32,23 @@ $options = array(
                 );
 
 $alma = new SoapClient($wsdl, $options);
-$soapresult = $alma->getUserLoans(array('arg0' => $useridentifier));
-$searchresults = simplexml_load_string($soapresult->SearchResults);
-$namespaces = $searchresults->getNameSpaces(true); // recursive
 
-if ($searchresults->errorsExist == 'true') {
-    // see $searchresults->errorList->error->errorMessage
-    $output  = json_encode($searchresults);
-} else {
-    $searchresult = $searchresults->result->search_web_service->searchResult;
-    $xb           = $searchresult->children($namespaces['xb']);
-    $output       = json_encode($xb);
+if ($action == 'getloans') {
+    
+    $soapresult = $alma->getUserLoans(array('arg0' => $useridentifier));
+    $searchresults = simplexml_load_string($soapresult->SearchResults);
+    $namespaces = $searchresults->getNameSpaces(true); // recursive
+    
+    if ($searchresults->errorsExist == 'true') {
+        // see $searchresults->errorList->error->errorMessage
+        $output  = json_encode($searchresults);
+    } else {
+        $searchresult = $searchresults->result->search_web_service->searchResult;
+        $xb           = $searchresult->children($namespaces['xb']);
+        $output       = json_encode($xb);
+    }
+} elseif ($action == 'renew') {
+    $output = json_encode(array('result' => 'OK'));
 }
 header('Content-type: application/json');
 echo $output;
