@@ -1,4 +1,11 @@
 <?php
+/**
+ * Block class for 'block_alma'
+ *
+ * @package   block_alma
+ * @copyright 2014 London School of Economics {@link http://www.lse.ac.uk/}
+ * @author    Chris Fryer <c.j.fryer@lse.ac.uk>
+ */
 class block_alma extends block_base {
 
     function init(){
@@ -13,16 +20,14 @@ class block_alma extends block_base {
         if ($this->content !== null) {
             return $this->content;
         }
-        
-        $loadingparams = array(
-            'id' => 'almaprogress',
-            'src' => $this->page->theme->pix_url('i/loading_small', 'moodle'),
-            'alt' => get_string('loading', 'block_alma'),
-        );
-        $loading = html_writer::empty_tag('img', $loadingparams);
-
         $this->content = new stdClass();
-        $this->content->text = $loading;
+        $this->content->text = '';
+        // see renderer.php
+        $renderer = $this->page->get_renderer($this->blockname);
+        
+        $this->content->text .= $renderer->search_form();
+        $this->content->text .= $renderer->get_spinner();
+
         $this->content->footer = '';
 
         $this->page->requires->yui_module('moodle-block_alma-loans',
@@ -38,4 +43,3 @@ class block_alma extends block_base {
         return $this->content;
     }
 }
-
