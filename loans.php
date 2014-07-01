@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX script to get patron loans from Alma
+ * AJAX endpoint to get patron loans from Alma
  *
  * Checks the user has required permissions,
  * then returns a JSON object containing loans
