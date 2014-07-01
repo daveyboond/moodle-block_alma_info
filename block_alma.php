@@ -13,7 +13,7 @@ class block_alma extends block_base {
         if ($this->content !== null) {
             return $this->content;
         }
-        global $USER;
+        
         $loadingparams = array(
             'id' => 'almaprogress',
             'src' => $this->page->theme->pix_url('i/loading_small', 'moodle'),
