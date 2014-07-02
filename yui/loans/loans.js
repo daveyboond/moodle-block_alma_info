@@ -4,6 +4,50 @@
 YUI.add('moodle-block_alma-loans', function(Y) {
 
     M.block_alma = M.block_alma || {};
+
+    M.block_alma.AlmaLoanItem = Y.Base.create('almaLoanItem', Y.Model, [], {
+        // methods (none)
+    }, {
+        ATTRS: {
+            loanId : {},
+            loanStatus : {},
+            dueDate : {},
+            processStatus : {},
+            description : {},
+            locationCode : {},
+            itemBarCode : {},
+            title : {},
+            author : {},
+            callNumber : {},
+            loanDate : {},
+            locationName : {},
+            itemPolicy : {},
+            loanFine : {}
+        }
+    });
+
+    M.block_alma.AlmaLoanItemsList = Y.Base.create('almaLoanItemsList', Y.ModelList, [], {
+
+        model : M.block_alma.AlmaLoanItem,
+
+        sync: function (action, options, callback) {
+
+            if (action == 'read') {
+                data = M.block_alma.loans.almaRequest('getloans');
+                callback(null, data);
+            }
+        },
+        parse : function (response) {
+            if (response) {
+                return (Array(response.item_loans.item_loan));
+            }
+            this.fire('error', {
+                type : 'parse',
+                error : 'No data in the response'
+            });
+        }
+    });
+
     M.block_alma.loans = {
 
         active: 0,                      // Count of active loan items
@@ -14,10 +58,39 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         popup: null,
         error: null,
 
+        table : new Y.DataTable({
+            recordType: M.block_alma.AlmaLoanItem,
+            columns : [
+                {
+                    key : 'title',
+                    label : 'Title'
+                },
+                {
+                    key :'dueDate',
+                    label : 'Due',
+                    formatter : function(o) {
+                        switch (o.data.loanStatus) {
+                            case 'Active' :
+                                o.className += 'active';
+                                break;
+                            case 'Overdue' :
+                                o.className += 'overdue';
+                                break;
+                        }
+                    }
+                }
+            ],
+            data: new M.block_alma.AlmaLoanItemsList(),
+            caption: "Your loans",
+            summary: "Table showing items you have on loan from the library",
+            sortable: true
+        }),
+
         init: function() {
-            var loans = this.almaRequest('getloans', this.setBlockText);
+            //var loans = this.almaRequest('getloans', this.setBlockText);
+            this.table.data.load();
         },
-        almaRequest : function(action, callback) {
+        almaRequest : function(action) {
             var request = Y.io(this.uri, {
                 data: build_querystring({
                     sesskey : M.cfg.sesskey,
@@ -28,6 +101,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     success: function(id, o) {
                         Y.log('AJAX call complete: ' + o.responseText,
                               'info', 'moodle-block_alma-loans');
+                        this.responseText = o.responseText;
                         try {
                             var response = Y.JSON.parse(o.responseText);
                             if (response['error']) { // Moodle has erred
@@ -50,7 +124,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                             }
                         }
                     },
-                    end : callback
                 }
             });
         },
@@ -89,7 +162,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             this.popup = new M.core.dialogue({
                 draggable    : true,
                 headerContent: this.blockname,
-                bodyContent  : this.getPopupText(),
+                bodyContent  : '<div id="almaloanstable">', //Y.one('#almaloanstable'),
                 centered     : true,
                 width        : '650px',
                 modal        : true,
@@ -100,6 +173,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 context: M.block_alma.loans,
                 action: 'renewLoans'
             });
+            this.table.render('#almaloanstable');
             loanstatus.on('click', this.popup.show, this.popup);
         },
         renewLoans: function(loanids) {
@@ -107,34 +181,8 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             // (or some of its child nodes) to new values.
             // @see http://yuilibrary.com/yui/docs/api/classes/Panel.html
             // this.popup.set('bodyContent', 'Only Users Lose Drugs');
-        },
-        getPopupText: function() {
-            var response = this.response;
-
-            popupcontent = Y.Node.create('<table />');
-            popupcontent.addClass('alma_table');
-
-            for (var i in response.item_loans) {
-                row = Y.Node.create('<tr />');
-
-                cellTitle = Y.Node.create('<td>' + response.item_loans[i].title + '</td>');
-                cellDuedate = Y.Node.create('<td>' + response.item_loans[i].dueDate + '</td>');
-                cellDuedate.addClass('alma_cell_duedate');
-
-                if (response.item_loans[i].loanStatus == 'Active') {
-                    cellDuedate.addClass('alma_active');
-                }
-                if (response.item_loans[i].loanStatus == 'Overdue') {
-                    cellDuedate.addClass('alma_overdue');
-                }
-
-                row.appendChild(cellTitle);
-                row.appendChild(cellDuedate);
-                popupcontent.appendChild(row);
-            }
-            return popupcontent;
         }
     };
 }, '@VERSION@', {
-    requires: ['node', 'io']
+    requires: ['node', 'io', 'model-list', 'datatable']
 });
