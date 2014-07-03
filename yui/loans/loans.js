@@ -27,14 +27,14 @@ YUI.add('moodle-block_alma-loans', function(Y) {
     });
 
     M.block_alma.AlmaLoanItemsList = Y.Base.create('almaLoanItemsList', Y.ModelList, [], {
-
+        
+        uri   : M.cfg.wwwroot+'/blocks/alma/loans.php',
+        
         model : M.block_alma.AlmaLoanItem,
 
         sync: function(action, options, callback) {
-            //~ Y.log('options: ' + options);
-            //~ Y.log('callback: ' + callback);
             if (action == 'read') {
-                Y.io(M.cfg.wwwroot+'/blocks/alma/loans.php', { // TODO: put this in an attribute
+                Y.io(this.uri, {
                     data: build_querystring({
                         sesskey : M.cfg.sesskey,
                         action  : 'getloans'
@@ -90,7 +90,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     }
                 }
             ],
-            data: new M.block_alma.AlmaLoanItemsList(),
+            data : new M.block_alma.AlmaLoanItemsList(),
             caption: "Your loans",
             summary: "Table showing items you have on loan from the library",
             sortable: true
@@ -112,15 +112,35 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         },
 
         init: function() {
-            table = this.table;
-            table.data.load(function(){
+            var table = this.table;
+            table.data.load( function() {
+                // need to pass "getloans" here? 
+                // Will that be passed to ModelList's sync function as part of its "options"?
                 table.render('#almaloanstable');
-                }
-            );
+            });
             this.panel.addButton({
                 label: 'Renew',
                 context: M.block_alma.loans,
                 action: 'renewLoans'
+            });
+            table.data.after('dataChange', function(e) {
+                Y.log('Table data changed!');
+            });
+            this.table.data.after('load', function(e) {
+                // Get array of "active" loans
+                var activeItems = e.target.filter(function(model) {
+                    return model.get('loanStatus') === 'Active';
+                });
+                var overdueItems = e.target.filter(function(model) {
+                    return model.get('loanStatus') === 'Overdue';
+                });
+                if (overdueItems.length) {
+                    Y.one('#almastatus').setHTML('<div>You have ' + overdueItems.length + ' items overdue</div>');
+                    Y.one('#almastatus').addClass('alma_overdue');
+                } else {    
+                    Y.one('#almastatus').setHTML('<div>You have ' + activeItems.length + ' items on loan</div>');
+                    Y.one('#almastatus').addClass('alma_active');
+                }
             });
             Y.one('#almastatus').on('click', this.panel.show, this.panel);
         }

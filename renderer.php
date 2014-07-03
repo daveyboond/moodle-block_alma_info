@@ -58,11 +58,12 @@ class block_alma_renderer extends plugin_renderer_base {
         return $content;
     }
     function get_spinner() {
-        $loadingparams = array(
-            'id' => 'almastatus',
+        $content  = html_writer::start_tag('div', array('id' => 'almastatus'));
+        $content .= html_writer::empty_tag('img', array(
             'src' => $this->page->theme->pix_url('i/loading_small', 'moodle'),
             'alt' => get_string('loading', 'block_alma'),
-        );
-        return html_writer::empty_tag('img', $loadingparams);
+        ));
+        $content .= html_writer::end_tag('div');
+        return $content;
     }
 }
