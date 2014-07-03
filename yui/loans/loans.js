@@ -144,44 +144,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             });
             Y.one('#almastatus').on('click', this.panel.show, this.panel);
         }
-
-/*
-        setBlockText: function() {
-          var response = this.response;
-
-            for (var i in response.item_loans) {
-                if (response.item_loans[i].loanStatus == 'Active') {
-                    this.active++;
-                }
-                if (response.item_loans[i].loanStatus == 'Overdue') {
-                    this.overdue++;
-                }
-            }
-
-            var almastatus = Y.Node.create('<div />');
-            activeHTML = (this.active > 1)
-                       ? M.util.get_string('activeitems', 'block_alma', this.active)
-                       : M.util.get_string('activeitem', 'block_alma', this.active);
-            activediv = Y.Node.create(activeHTML);
-            activediv.addClass('alma_active');
-            almastatus.appendChild(activediv);
-
-            if (this.overdue > 0) {
-                overdueHTML = (this.overdue > 1)
-                            ? M.util.get_string('overdueitems', 'block_alma', this.overdue)
-                            : M.util.get_string('overdueitem', 'block_alma', this.overdue);
-                overduediv = Y.Node.create(overdueHTML);
-                overduediv.addClass('alma_overdue');
-                almastatus.appendChild(overduediv);
-            }
-
-            Y.one('#almastatus').replace(almastatus);
-            almastatus.set('id', 'almastatus');
-
-            this.table.render('#almaloanstable');
-            almastatus.on('click', this.popup.show, this.popup);
-
-        }*/
     };
 }, '@VERSION@', {
     requires: ['moodle-core-notification-dialogue', 'node', 'io', 'model-list', 'datatable']
