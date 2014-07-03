@@ -81,10 +81,10 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     formatter : function(o) {
                         switch (o.data.loanStatus) {
                             case 'Active' :
-                                o.className += 'active';
+                                o.className += 'alma_active';
                                 break;
                             case 'Overdue' :
-                                o.className += 'overdue';
+                                o.className += 'alma_overdue';
                                 break;
                         }
                     }
