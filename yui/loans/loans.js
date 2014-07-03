@@ -31,14 +31,33 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         model : M.block_alma.AlmaLoanItem,
 
         sync: function(action, options, callback) {
+            //~ Y.log('options: ' + options);
+            //~ Y.log('callback: ' + callback);
             if (action == 'read') {
-                data = M.block_alma.request('getloans');
-                callback(null, data);
+                Y.io(M.cfg.wwwroot+'/blocks/alma/loans.php', { // TODO: put this in an attribute
+                    data: build_querystring({
+                        sesskey : M.cfg.sesskey,
+                        action  : 'getloans'
+                    }),
+                    on: {
+                        success: function(id, o) {
+                            Y.log('AJAX call complete: ' + o.responseText,
+                                  'info', 'moodle-block_alma-loans');
+                            callback(null, o.responseText);
+                        },
+                        failure: function(id, o) {
+                            Y.log('AJAX call failed: ' + o.responseText,
+                                  'info', 'moodle-block_alma-loans');
+                        }
+                    }
+                });
             }
         },
         parse : function(response) {
             if (response) {
-                return (Array(response.item_loans.item_loan));
+                parsedResponse = Y.JSON.parse(response);
+                // Is this all items on loan, or just the first?
+                return (Array(parsedResponse.item_loans.item_loan));
             }
             this.fire('error', {
                 type : 'parse',
@@ -46,26 +65,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             });
         }
     });
-
-    M.block_alma.request = function(action) {
-        var xhr = Y.io(M.cfg.wwwroot+'/blocks/alma/loans.php', { // TODO: put this in an attribute
-            data: build_querystring({
-                sesskey : M.cfg.sesskey,
-                action  : action
-            }),
-            on: {
-                success: function(id, o) {
-                    Y.log('AJAX call complete: ' + o.responseText,
-                          'info', 'moodle-block_alma-loans');
-                    return o.responseText;
-                },
-                failure: function(id, o) {
-                    Y.log('AJAX call failed: ' + o.responseText,
-                          'info', 'moodle-block_alma-loans');
-                }
-            }
-        });
-    },
 
     M.block_alma.loans = {
 
