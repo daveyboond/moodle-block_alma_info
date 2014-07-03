@@ -59,7 +59,7 @@ class block_alma_renderer extends plugin_renderer_base {
     }
     function get_spinner() {
         $loadingparams = array(
-            'id' => 'almaprogress',
+            'id' => 'almastatus',
             'src' => $this->page->theme->pix_url('i/loading_small', 'moodle'),
             'alt' => get_string('loading', 'block_alma'),
         );
