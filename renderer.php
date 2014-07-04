@@ -51,8 +51,8 @@ class block_alma_renderer extends plugin_renderer_base {
         ));
         $content .= html_writer::empty_tag('input', array(
             'type'  => 'submit',
-            'name'  => 'Go',
-            'value' => 'search',
+            'name'  => 'search',
+            'value' => 'Go',
         ));
         $content .= html_writer::end_tag('form');
         return $content;

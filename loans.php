@@ -34,21 +34,32 @@ $options = array(
 $alma = new SoapClient($wsdl, $options);
 
 if ($action == 'getloans') {
-    
+
+    // Call the Alma web service
     $soapresult = $alma->getUserLoans(array('arg0' => $useridentifier));
+    // Parse into SimpleXMLElement
     $searchresults = simplexml_load_string($soapresult->SearchResults);
-    $namespaces = $searchresults->getNameSpaces(true); // recursive
-    
-    if ($searchresults->errorsExist == 'true') {
-        // see $searchresults->errorList->error->errorMessage
-        $output  = json_encode($searchresults);
-    } else {
+
+    // This is hacky, but the SimpleXMLElement class is unruly
+    $output = json_decode(json_encode($searchresults));
+    if ($searchresults->errorsExist != 'true') {
+        // This is the portion of the response containing patron loans
         $searchresult = $searchresults->result->search_web_service->searchResult;
-        $xb           = $searchresult->children($namespaces['xb']);
-        $output       = json_encode($xb);
+        // which is in the 'xb:' namespace
+        $namespaces = $searchresults->getNameSpaces(true);
+        $xb = $searchresult->children($namespaces['xb']);
+        // Again, hack this into something more manageable ...
+        //$xb = json_decode(json_encode($xb));
+        $itemloans = array();
+        foreach ($xb->item_loans->item_loan as $itemloan) {
+            array_push($itemloans, $itemloan);
+        }
+        // ... which we can append to the stdClass
+        $output->result->search_web_service->searchResult->item_loans = $itemloans;
     }
+    $json = json_encode($output);
 } elseif ($action == 'renew') {
-    $output = json_encode(array('result' => 'OK'));
+    $json = json_encode(array('result' => 'OK'));
 }
 header('Content-type: application/json');
-echo $output;
+echo $json;
