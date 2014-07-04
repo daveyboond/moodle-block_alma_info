@@ -27,9 +27,9 @@ YUI.add('moodle-block_alma-loans', function(Y) {
     });
 
     M.block_alma.AlmaLoanItemsList = Y.Base.create('almaLoanItemsList', Y.ModelList, [], {
-        
+
         uri   : M.cfg.wwwroot+'/blocks/alma/loans.php',
-        
+
         model : M.block_alma.AlmaLoanItem,
 
         sync: function(action, options, callback) {
@@ -55,9 +55,17 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         },
         parse : function(response) {
             if (response) {
-                parsedResponse = Y.JSON.parse(response);
-                // Is this all items on loan, or just the first?
-                return (Array(parsedResponse.item_loans.item_loan));
+                var parsedResponse = Y.JSON.parse(response);
+
+                if (parsedResponse.errorsExist == 'false') {
+
+                    return parsedResponse.result.search_web_service.searchResult.item_loans;
+
+                }
+                this.fire('error', { // Where can we pick this up?
+                    type : 'parse',
+                    error : parsedResponse.errorList.error.errorMessage
+                });
             }
             this.fire('error', {
                 type : 'parse',
@@ -93,7 +101,8 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             data : new M.block_alma.AlmaLoanItemsList(),
             caption: "Your loans",
             summary: "Table showing items you have on loan from the library",
-            sortable: true
+            sortable: true,
+            scrollable: true
         }),
 
         panel : new M.core.dialogue({
@@ -101,9 +110,9 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             headerContent: M.util.get_string('pluginname','block_alma'),
             bodyContent  : '<div id="almaloanstable">',
             centered     : true,
-            width        : '650px',
+            width        : '640px',
             modal        : true,
-            visible      : false
+            visible      : false,
         }),
 
         renewLoans: function(loanids) {
@@ -113,11 +122,15 @@ YUI.add('moodle-block_alma-loans', function(Y) {
 
         init: function() {
             var table = this.table;
-            table.data.load( function() {
-                // need to pass "getloans" here? 
-                // Will that be passed to ModelList's sync function as part of its "options"?
-                table.render('#almaloanstable');
-            });
+            try {
+                table.data.load( function() {
+                    // need to pass "getloans" here?
+                    // Will that be passed to ModelList's sync function as part of its "options"?
+                    table.render('#almaloanstable');
+                });
+            } catch (e) {
+                Y.one('#almastatus').set('text', e.getMessage());
+            }
             this.panel.addButton({
                 label: 'Renew',
                 context: M.block_alma.loans,
@@ -135,10 +148,14 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     return model.get('loanStatus') === 'Overdue';
                 });
                 if (overdueItems.length) {
-                    Y.one('#almastatus').setHTML('<div>You have ' + overdueItems.length + ' items overdue</div>');
+                    var template = (overdueItems.length == 1) ? 'overdueitem' : 'overdueitems';
+                    var statustext = M.util.get_string(template, 'block_alma', overdueItems.length)
+                    Y.one('#almastatus').set('text', statustext);
                     Y.one('#almastatus').addClass('alma_overdue');
-                } else {    
-                    Y.one('#almastatus').setHTML('<div>You have ' + activeItems.length + ' items on loan</div>');
+                } else {
+                    var template = (activeItems.length == 1) ? 'activeitem' : 'activeitems';
+                    var statustext = M.util.get_string(template, 'block_alma', activeItems.length)
+                    Y.one('#almastatus').set('text', statustext);
                     Y.one('#almastatus').addClass('alma_active');
                 }
             });
