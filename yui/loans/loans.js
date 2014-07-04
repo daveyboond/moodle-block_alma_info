@@ -60,16 +60,11 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 if (parsedResponse.errorsExist == 'false') {
 
                     return parsedResponse.result.search_web_service.searchResult.item_loans;
-
-                }
-                this.fire('error', { // Where can we pick this up?
-                    type : 'parse',
-                    error : parsedResponse.errorList.error.errorMessage
-                });
+                } 
             }
             this.fire('error', {
                 type : 'parse',
-                error : 'No data in the response'
+                error : parsedResponse.errorList.error.errorMessage // What other errors might we encounter?
             });
         }
     });
@@ -131,6 +126,9 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             } catch (e) {
                 Y.one('#almastatus').set('text', e.getMessage());
             }
+            table.data.on('error', function(e) {
+                Y.one('#almastatus').replace('<div>' + e.error +'</div>');
+            });
             this.panel.addButton({
                 label: 'Renew',
                 context: M.block_alma.loans,
@@ -139,24 +137,27 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             table.data.after('dataChange', function(e) {
                 Y.log('Table data changed!');
             });
-            this.table.data.after('load', function(e) {
-                // Get array of "active" loans
-                var activeItems = e.target.filter(function(model) {
-                    return model.get('loanStatus') === 'Active';
-                });
-                var overdueItems = e.target.filter(function(model) {
-                    return model.get('loanStatus') === 'Overdue';
-                });
-                if (overdueItems.length) {
-                    var template = (overdueItems.length == 1) ? 'overdueitem' : 'overdueitems';
-                    var statustext = M.util.get_string(template, 'block_alma', overdueItems.length)
-                    Y.one('#almastatus').set('text', statustext);
-                    Y.one('#almastatus').addClass('alma_overdue');
-                } else {
-                    var template = (activeItems.length == 1) ? 'activeitem' : 'activeitems';
-                    var statustext = M.util.get_string(template, 'block_alma', activeItems.length)
-                    Y.one('#almastatus').set('text', statustext);
-                    Y.one('#almastatus').addClass('alma_active');
+            table.data.after('load', function(e) {
+                try {
+                    var activeItems = e.target.filter(function(model) {
+                        return model.get('loanStatus') === 'Active';
+                    });
+                    var overdueItems = e.target.filter(function(model) {
+                        return model.get('loanStatus') === 'Overdue';
+                    });
+                    if (overdueItems.length) {
+                        var template = (overdueItems.length == 1) ? 'overdueitem' : 'overdueitems';
+                        var statustext = M.util.get_string(template, 'block_alma', overdueItems.length)
+                        Y.one('#almastatus').set('text', statustext);
+                        Y.one('#almastatus').addClass('alma_overdue');
+                    } else {
+                        var template = (activeItems.length == 1) ? 'activeitem' : 'activeitems';
+                        var statustext = M.util.get_string(template, 'block_alma', activeItems.length)
+                        Y.one('#almastatus').set('text', statustext);
+                        Y.one('#almastatus').addClass('alma_active');
+                    }
+                } catch (e) {
+                    //Y.log(e.message);
                 }
             });
             Y.one('#almastatus').on('click', this.panel.show, this.panel);
