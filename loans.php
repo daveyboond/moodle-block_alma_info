@@ -21,6 +21,7 @@ $institutioncode = get_config('block_alma', 'institutioncode');
 $password        = get_config('block_alma', 'soappassword');
 $useridentifier  = $USER->idnumber;
 $action          = required_param('action', PARAM_ALPHA);
+$renewloanids    = optional_param('loanids', '', PARAM_SEQUENCE);
 
 $login = "AlmaSDK-{$soapuser}-institutionCode-{$institutioncode}";
 
@@ -38,7 +39,7 @@ if ($action == 'getloans') {
     $soapresult = $alma->getUserLoans(array('arg0' => $useridentifier));
     // Parse into SimpleXMLElement
     $searchresults = simplexml_load_string($soapresult->SearchResults);
-    // This is hacky, but the SimpleXMLElement class is unruly and this 
+    // This is hacky, but the SimpleXMLElement class is unruly and this
     // gives us a stdClass we can actually work with. (TMBABWTDI)
     $output = json_decode(json_encode($searchresults));
     if ($searchresults->errorsExist != 'true') {
@@ -57,7 +58,25 @@ if ($action == 'getloans') {
     }
     $json = json_encode($output);
 } elseif ($action == 'renew') {
-    $json = json_encode(array('result' => 'OK'));
+    $renew = new SimpleXMLElement('<loan_renew_items/>');
+    $renew->addAttribute('xmlns', 'http://com/exlibris/urm/loan_renew_items/xmlbeans');
+    $renew->addChild('userIdentifier', $useridentifier);
+    $loanidlist = $renew->addChild('loanIdList');
+    foreach (explode(',', $renewloanids) as $r) {
+        $loanidlist->addChild('loanId', $r);
+    }
+    $params = array('arg0' => $renew->asXML());
+    $renewresponse = $alma->renewUserLoans($params);
+    $searchresults = simplexml_load_string($renewresponse->SearchResults);
+    $output = json_decode(json_encode($searchresults));
+    $namespaces = $searchresults->getNameSpaces(true);
+    $xb = $searchresults->result->children($namespaces['xb']);
+    $renewresults = array();
+    foreach ($xb->loan_renew as $loanrenew) {
+        array_push($renewresults, $loanrenew);
+    }
+    $output->result->loan_renew = $renewresults;
+    $json = json_encode($output);
 }
 header('Content-type: application/json');
 echo $json;

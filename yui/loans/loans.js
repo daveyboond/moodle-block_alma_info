@@ -7,6 +7,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
 
     M.block_alma.AlmaLoanItem = Y.Base.create('almaLoanItem', Y.Model, [], {
         // methods (none)
+        idAttribute : 'loanId'
     }, {
         ATTRS: {
             loanId : {},
@@ -60,7 +61,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 if (parsedResponse.errorsExist == 'false') {
 
                     return parsedResponse.result.search_web_service.searchResult.item_loans;
-                } 
+                }
             }
             this.fire('error', {
                 type : 'parse',
@@ -82,6 +83,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     key :'dueDate',
                     label : 'Due',
                     formatter : function(o) {
+                        Y.log(o.value);
                         switch (o.data.loanStatus) {
                             case 'Active' :
                                 o.className += 'alma_active';
@@ -90,7 +92,12 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                                 o.className += 'alma_overdue';
                                 break;
                         }
+                        return Y.Date.format(Y.Date.parse(o.value), {format : "%d %b %Y"} );
                     }
+                },
+                {
+                    key  : 'renewalStatus',
+                    label: 'Renewal status',
                 }
             ],
             data : new M.block_alma.AlmaLoanItemsList(),
@@ -110,17 +117,53 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             visible      : false,
         }),
 
-        renewLoans: function(loanids) {
-            // TODO : get this function to renew loans
-            //      : add subscribers to the ModelList's events
+        renewLoans: function() {
+
+            var table = this.table;
+            var loanIds = table.data.get('loanId');
+
+            var renewresults = Y.io(table.data.uri, {
+                data: build_querystring({
+                    sesskey : M.cfg.sesskey,
+                    action  : 'renew',
+                    loanids : loanIds.toString()
+                }),
+                on: {
+                    success: function(id, o) {
+                        Y.log('AJAX call complete: ' + o.responseText,
+                              'info', 'moodle-block_alma-loans');
+                        var response = Y.JSON.parse(o.responseText);
+                        if (response.errorsExist == 'false') {
+                            for (i=0; i < response.result.loan_renew.length; i++) {
+                                var loanrenew = response.result.loan_renew[i];
+                                var matchingLoanItem = table.getRecord(loanrenew['loanId']);
+                                Y.log(loanrenew);
+                                if (loanrenew.Success == 'false') {
+                                    matchingLoanItem.set('renewalStatus', 'Not renewed: ' + loanrenew.FailureReason);
+                                } else {
+                                    matchingLoanItem.set('renewalStatus', 'Renewed');
+                                }
+                            }
+                        } else {
+                            // errors exist
+                        }
+
+                    },
+                    failure: function(id, o) {
+                        Y.log('AJAX call failed: ' + o.responseText,
+                              'info', 'moodle-block_alma-loans');
+                    }
+                }
+            });
+        },
+
+        displayRenewResult : function(response) {
         },
 
         init: function() {
             var table = this.table;
             try {
                 table.data.load( function() {
-                    // need to pass "getloans" here?
-                    // Will that be passed to ModelList's sync function as part of its "options"?
                     table.render('#almaloanstable');
                 });
             } catch (e) {
@@ -157,12 +200,12 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                         Y.one('#almastatus').addClass('alma_active');
                     }
                 } catch (e) {
-                    //Y.log(e.message);
+                    Y.log(e.message);
                 }
             });
             Y.one('#almastatus').on('click', this.panel.show, this.panel);
         }
     };
 }, '@VERSION@', {
-    requires: ['moodle-core-notification-dialogue', 'node', 'io', 'model-list', 'datatable']
+    requires: ['moodle-core-notification-dialogue', 'node', 'io', 'model-list', 'datatable', 'datatype-date-format', 'datatype-date-parse']
 });
