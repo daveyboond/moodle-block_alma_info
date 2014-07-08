@@ -134,20 +134,21 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 }),
                 on: {
                     success: function(id, o) {
-                        Y.log('AJAX call complete: ' + o.responseText,
-                              'info', 'moodle-block_alma-loans');
                         var response = Y.JSON.parse(o.responseText);
                         if (response.errorsExist == 'false') {
-                            for (i=0; i < response.result.loan_renew.length; i++) {
-                                var loanrenew = response.result.loan_renew[i];
-                                var matchingLoanItem = table.getRecord(loanrenew['loanId']);
-                                Y.log(loanrenew);
-                                if (loanrenew.Success == 'false') {
-                                    matchingLoanItem.set('renewalStatus', 'Not renewed: ' + loanrenew.FailureReason);
-                                } else {
-                                    matchingLoanItem.set('renewalStatus', 'Renewed');
+
+                            table.data.load({ action : 'getloans'}, function() { // refresh the datatable with new due dates
+
+                                for (var i=0; i < response.result.loan_renew.length; i++) {
+                                    var loanrenew = response.result.loan_renew[i];
+                                    var matchingLoanItem = table.getRecord(loanrenew['loanId']);
+                                    if (loanrenew.Success == 'false') {
+                                        matchingLoanItem.set('renewalStatus', 'Not renewed: ' + loanrenew.FailureReason);
+                                    } else {
+                                        matchingLoanItem.set('renewalStatus', 'Renewed');
+                                    }
                                 }
-                            }
+                            });
                         } else {
                             // errors exist
                         }
