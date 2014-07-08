@@ -3,6 +3,6 @@
  */
 #almastatus { cursor: pointer; text-align: center;}
 .alma_active { font-weight: bold; color: #32CD32; }
-.alma_overdue { font-weight: bold; color: #ff0000; }
+#almaerror, .alma_overdue { font-weight: bold; color: #ff0000; }
 .alma_table { table-layout: fixed; width: 100%;}
 .alma_cell_duedate {width: 20%;}
