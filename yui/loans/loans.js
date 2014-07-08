@@ -14,7 +14,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             processStatus : {},
             description : {},
             locationCode : {},
-            itemBarCode : {},
+            itemBarcode : {},
             title : {},
             author : {},
             callNumber : {},
