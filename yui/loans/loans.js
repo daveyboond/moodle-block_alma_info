@@ -88,7 +88,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     key :'dueDate',
                     label : 'Due',
                     formatter : function(o) {
-                        Y.log(o.value);
                         switch (o.data.loanStatus) {
                             case 'Active' :
                                 o.className += 'alma_active';
