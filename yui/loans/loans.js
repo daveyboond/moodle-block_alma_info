@@ -1,13 +1,11 @@
-/**
- * TODO: take a look at wwwroot/repository/filepicker.js
- */
 YUI.add('moodle-block_alma-loans', function(Y) {
 
     M.block_alma = M.block_alma || {}
 
     M.block_alma.AlmaLoanItem = Y.Base.create('almaLoanItem', Y.Model, [], {
-        // methods (none)
+
         idAttribute : 'loanId'
+
     }, {
         ATTRS: {
             loanId : {},
@@ -147,7 +145,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                         } else {
                             // errors exist
                         }
-
                     },
                     failure: function(id, o) {
                         Y.log('AJAX call failed: ' + o.responseText,
@@ -155,9 +152,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     }
                 }
             });
-        },
-
-        displayRenewResult : function(response) {
         },
 
         init: function() {
