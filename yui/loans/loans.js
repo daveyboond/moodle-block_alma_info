@@ -36,34 +36,41 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 Y.io(this.uri, {
                     data: build_querystring({
                         sesskey : M.cfg.sesskey,
-                        action  : 'getloans'
+                        action  : options.action //'getloans'
                     }),
                     on: {
                         success: function(id, o) {
-                            Y.log('AJAX call complete: ' + o.responseText,
-                                  'info', 'moodle-block_alma-loans');
                             callback(null, o.responseText);
                         },
                         failure: function(id, o) {
-                            Y.log('AJAX call failed: ' + o.responseText,
-                                  'info', 'moodle-block_alma-loans');
+                            callback(o.status + ': ' + o.statusText);
                         }
                     }
                 });
             }
         },
         parse : function(response) {
+
+            var parseError;
             if (response) {
-                var parsedResponse = Y.JSON.parse(response);
-
-                if (parsedResponse.errorsExist == 'false') {
-
-                    return parsedResponse.result.search_web_service.searchResult.item_loans;
+                try {
+                    var parsedResponse = Y.JSON.parse(response);
+                    if (parsedResponse.errorsExist == 'true') { // Yes, 'true' is a string here
+                        parseError = parsedResponse.errorList.error.errorMessage;// Alma error
+                    } else if (parsedResponse.error != null) {
+                        parseError = parsedResponse.error; // Moodle error    
+                    } else {
+                        return parsedResponse.result.search_web_service.searchResult.item_loans;
+                    }
+                } catch (e) {
+                    parseError = e.toString();
                 }
+            } else {
+                parseError = 'No data received';                
             }
             this.fire('error', {
-                type : 'parse',
-                error : parsedResponse.errorList.error.errorMessage // What other errors might we encounter?
+                type  : 'parse',
+                error : parseError
             });
         }
     });
@@ -155,16 +162,29 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         },
 
         init: function() {
+
             var table = this.table;
-            try {
-                table.data.load( function() {
-                    table.render('#almaloanstable');
+
+            table.data.load({ action : 'getloans'} , function() {
+                var activeItems = table.data.filter(function(model) {
+                    return model.get('loanStatus') === 'Active';
                 });
-            } catch (e) {
-                Y.one('#almastatus').set('text', e.getMessage());
-            }
-            table.data.on('error', function(e) {
-                Y.one('#almastatus').replace('<div>' + e.error +'</div>');
+                var overdueItems = table.data.filter(function(model) {
+                    return model.get('loanStatus') === 'Overdue';
+                });
+                if (overdueItems.length) {
+                    var template = (overdueItems.length == 1) ? 'overdueitem' : 'overdueitems';
+                    var statustext = M.util.get_string(template, 'block_alma', overdueItems.length)
+                    Y.one('#almastatus').set('text', statustext);
+                    Y.one('#almastatus').addClass('alma_overdue');
+                } else {
+                    var template = (activeItems.length == 1) ? 'activeitem' : 'activeitems';
+                    var statustext = M.util.get_string(template, 'block_alma', activeItems.length)
+                    Y.one('#almastatus').set('text', statustext);
+                    Y.one('#almastatus').addClass('alma_active');
+                }
+                table.render('#almaloanstable');
+                Y.one('#almastatus').on('click', this.panel.show, this.panel);
             });
             this.panel.addButton({
                 label: 'Renew',
@@ -174,30 +194,13 @@ YUI.add('moodle-block_alma-loans', function(Y) {
             table.data.after('dataChange', function(e) {
                 Y.log('Table data changed!');
             });
-            table.data.after('load', function(e) {
-                try {
-                    var activeItems = e.target.filter(function(model) {
-                        return model.get('loanStatus') === 'Active';
-                    });
-                    var overdueItems = e.target.filter(function(model) {
-                        return model.get('loanStatus') === 'Overdue';
-                    });
-                    if (overdueItems.length) {
-                        var template = (overdueItems.length == 1) ? 'overdueitem' : 'overdueitems';
-                        var statustext = M.util.get_string(template, 'block_alma', overdueItems.length)
-                        Y.one('#almastatus').set('text', statustext);
-                        Y.one('#almastatus').addClass('alma_overdue');
-                    } else {
-                        var template = (activeItems.length == 1) ? 'activeitem' : 'activeitems';
-                        var statustext = M.util.get_string(template, 'block_alma', activeItems.length)
-                        Y.one('#almastatus').set('text', statustext);
-                        Y.one('#almastatus').addClass('alma_active');
-                    }
-                } catch (e) {
-                    Y.log(e.message);
-                }
+            // If we run into any trouble, let the user know
+            table.data.on('error', function(e) {
+                almaerror = Y.Node.create('<div>Error: ' + e.error + '</div>');
+                almaerror.set('id', 'almaerror');
+                // Trash the #almastatus div altogether to prevent this getting overwritten later
+                Y.one('#almastatus').replace(almaerror);
             });
-            Y.one('#almastatus').on('click', this.panel.show, this.panel);
         }
     };
 }, '@VERSION@', {
