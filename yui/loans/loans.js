@@ -163,6 +163,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
         init: function() {
 
             var table = this.table;
+            var panel = this.panel;
 
             table.data.load({ action : 'getloans'} , function() {
                 var activeItems = table.data.filter(function(model) {
@@ -183,7 +184,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                     Y.one('#almastatus').addClass('alma_active');
                 }
                 table.render('#almaloanstable');
-                Y.one('#almastatus').on('click', this.panel.show, this.panel);
+                Y.one('#almastatus').on('click', panel.show, panel);
             });
             this.panel.addButton({
                 label: 'Renew',
