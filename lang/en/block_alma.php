@@ -8,9 +8,12 @@
  */
 $string['pluginname'] = 'My New Library';
 $string['wsdlurl'] = 'URL of Alma WSDL';
+$string['wsdldescription'] = 'URL of the Web Service Description Language file for the Alma SOAP API.';
 $string['soapuser'] = 'Username';
+$string['soapuserdescription'] = 'An Alma account with "API Fulfillment Read" and "API Fulfillment Write" roles';
 $string['soappassword'] = 'Password';
 $string['institutioncode'] = 'Institution code';
+$string['institutioncodedescription'] = 'Code identifying your institution in Alma';
 $string['loading'] = 'Loading...';
 $string['activeitem'] = 'You have {$a} item on loan';
 $string['activeitems'] = 'You have {$a} items on loan';
