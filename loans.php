@@ -51,6 +51,9 @@ if ($action == 'getloans') {
         // Create an old-fashioned array out of SimpleXML's Iterable filth
         $itemloans = array();
         foreach ($xb->item_loans->item_loan as $itemloan) {
+            if (strtotime($itemloan->dueDate) < time()) { // HACK
+                $itemloan->loanStatus = 'Overdue';
+            }
             array_push($itemloans, $itemloan);
         }
         // ... which we can append to the stdClass
