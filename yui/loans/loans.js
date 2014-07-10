@@ -192,9 +192,6 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 context: M.block_alma.loans,
                 action: 'renewLoans'
             });
-            table.data.after('dataChange', function(e) {
-                Y.log('Table data changed!');
-            });
             // If we run into any trouble, let the user know
             table.data.on('error', function(e) {
                 almaerror = Y.Node.create('<div>Error: ' + e.error + '</div>');
