@@ -148,6 +148,16 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                                         matchingLoanItem.set('renewalStatus', 'Renewed');
                                     }
                                 }
+                                
+                                table.modifyColumn('renewalStatus', { 
+                                    formatter : function(o) {
+                                        if (o.value == 'Renewed') {
+                                            o.className += 'alma_active';
+                                        } else {
+                                            o.className += 'alma_overdue';
+                                        }
+                                    }
+                                });
                             });
                         } else {
                             // errors exist
