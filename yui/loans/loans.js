@@ -87,6 +87,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 {
                     key :'dueDate',
                     label : 'Due',
+                    width : '8em',
                     formatter : function(o) {
                         switch (o.data.loanStatus) {
                             case 'Active' :
@@ -105,7 +106,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 }
             ],
             data : new M.block_alma.AlmaLoanItemsList(),
-            caption: "Your loans",
+            //caption: "Your loans",
             summary: "Table showing items you have on loan from the library",
             sortable: true,
             scrollable: true
