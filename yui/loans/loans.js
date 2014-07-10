@@ -143,7 +143,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                                     var loanrenew = response.result.loan_renew[i];
                                     var matchingLoanItem = table.getRecord(loanrenew['loanId']);
                                     if (loanrenew.Success == 'false') {
-                                        matchingLoanItem.set('renewalStatus', 'Not renewed: ' + loanrenew.FailureReason);
+                                        matchingLoanItem.set('renewalStatus', loanrenew.FailureReason);
                                     } else {
                                         matchingLoanItem.set('renewalStatus', 'Renewed');
                                     }
