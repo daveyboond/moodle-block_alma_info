@@ -97,6 +97,7 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                                 o.className += 'alma_overdue';
                                 break;
                         }
+                        o.value = o.value.replace(" ", "T"); // Fix for Mozilla
                         return Y.Date.format(Y.Date.parse(o.value), {format : "%d %b %Y"} );
                     }
                 },
