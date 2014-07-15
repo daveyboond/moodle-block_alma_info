@@ -211,6 +211,10 @@ YUI.add('moodle-block_alma-loans', function(Y) {
                 // Trash the #almastatus div altogether to prevent this getting overwritten later
                 Y.one('#almastatus').replace(almaerror);
             });
+            Y.one('#block_alma_primo_search_input').set('value', 'Search Primo');
+            Y.one('#block_alma_primo_search_input').on('focus', function(e) {
+                e.target.set('value', '');
+            });
         }
     };
 }, '@VERSION@', {
