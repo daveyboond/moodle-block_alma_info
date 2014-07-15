@@ -50,9 +50,8 @@ class block_alma_renderer extends plugin_renderer_base {
             'value' => 'true',
         ));
         $content .= html_writer::empty_tag('input', array(
-            'type'  => 'submit',
-            'name'  => 'search',
-            'value' => 'Go',
+            'type'  => 'image',
+            'src'   => $this->page->theme->pix_url('i/search', 'moodle'),
         ));
         $content .= html_writer::end_tag('form');
         return $content;
