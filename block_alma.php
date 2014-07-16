@@ -16,6 +16,12 @@ class block_alma extends block_base {
     function has_config() { // Globally-configured
         return true;
     }
+    function applicable_formats() {
+        return array(
+            'all' => false,
+            'my'  => true,
+        );
+    }
     function get_content() {
         if ($this->content !== null) {
             return $this->content;
