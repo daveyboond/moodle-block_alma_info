@@ -22,4 +22,11 @@ $settings->add(new admin_setting_configtext('block_alma/institutioncode',
                                             get_string('institutioncode', 'block_alma'),
                                             get_string('institutioncodedescription', 'block_alma'),
                                             ''));
-
+$settings->add(new admin_setting_configtext('block_alma/primourl',
+                                            get_string('primourl', 'block_alma'),
+                                            get_string('primourldescription', 'block_alma'),
+                                            'http://{your Primo}/primo_library/libweb/action/search.do'));
+$settings->add(new admin_setting_configtext('block_alma/primovuid',
+                                            get_string('primovuid', 'block_alma'),
+                                            get_string('primovuiddescription', 'block_alma'),
+                                            ''));

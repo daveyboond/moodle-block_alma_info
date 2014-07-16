@@ -6,7 +6,6 @@
  * @copyright 2014 London School of Economics {@link http://www.lse.ac.uk/}
  * @author    Chris Fryer <c.j.fryer@lse.ac.uk>
  */
-// TODO: Replace hard-coded PRIMO URL
 class block_alma_renderer extends plugin_renderer_base {
 
     function search_form() {
@@ -14,7 +13,7 @@ class block_alma_renderer extends plugin_renderer_base {
         // The search form
         $content .= html_writer::start_tag('form', array(
             'method' => 'GET',
-            'action' => 'http://primo-direct-eu.hosted.exlibrisgroup.com/primo_library/libweb/action/search.do', //FIXME
+            'action' => get_config('block_alma', 'primourl'),
         ));
         // The search input
         $content .= html_writer::empty_tag('input', array(
@@ -26,7 +25,7 @@ class block_alma_renderer extends plugin_renderer_base {
         $content .= html_writer::empty_tag('input', array(
             'type'  => 'hidden',
             'name'  => 'vid',
-            'value' => get_config('block_alma', 'institutioncode') . '_VU1',
+            'value' => get_config('block_alma', 'primovuid'),
         ));
         // Hidden Institution Code
         $content .= html_writer::empty_tag('input', array(
